@@ -49,12 +49,12 @@ void *sender(void *arg) {
         if (!p.hasRequestedCritialSection && !p.isAccessingCriticalSection) { // Not Accessing Critical Section or not requested it yet.
             p.clock++;
             pq.push({p.clock, p.id});
-            cout << "Processor " << p.id << " is requesting the critical section at " << p.clock << "\n";
+            cout << YEL << "Processor " << p.id << " is requesting the critical section at " << p.clock << "\n" << NRM;
             p.broadcast("REQUEST"); // Request for accessing critical section.
             p.hasRequestedCritialSection = true;
         }
         if (p.needsToRelease) {
-            cout << "Processor " << p.id << " has left the critical section at " << p.clock << "\n";
+            cout << RED << "Processor " << p.id << " has left the critical section at " << p.clock << "\n" << NRM;
             p.clock++;
             p.broadcast("RELEASE");
             pq.pop();
@@ -68,7 +68,7 @@ void *sender(void *arg) {
 void tryToAccessCritialSection() {
     if (p.noOfReplies == 2 && !pq.empty() && pq.top().second == p.id) {
         p.isAccessingCriticalSection = true;
-        cout << "Processor " << p.id << " is accessing the critical section at " << p.clock << "\n";
+        cout << GRN << "Processor " << p.id << " is accessing the critical section at " << p.clock << "\n" << NRM;
         sleep(rand() % 2); // Random sleep to simulate processing of the critical section
         p.noOfReplies = 0;
         p.needsToRelease = true;

@@ -1,7 +1,0 @@
-#include <bits/stdc++.h>
-#include "includes/const.hpp"
-#include "includes/comms.hpp"
-#include "includes/connector.hpp"
-#include <unistd.h>
-
-using namespace std;
