@@ -8,6 +8,7 @@
 
 using namespace std;
 
+std::mutex mtx;
 vector<comms> connections;
 int PORT_SERVER, PORT_CLIENT;
 priority_queue <pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq; // Min Priority Queue
@@ -17,6 +18,7 @@ class processor {
     int id, clock, noOfReplies;
     bool hasRequestedCritialSection, isAccessingCriticalSection, needsToRelease;
     void broadcast (string msgType) {
+        lock_guard<mutex> guard(mtx);
         if (msgType == "REQUEST") {
             connections[0].sendMsg(msgType + "," + to_string(clock) + "," + to_string(id));
             connections[1].sendMsg(msgType + "," + to_string(clock) + "," + to_string(id));
@@ -49,13 +51,13 @@ void *sender(void *arg) {
         if (!p.hasRequestedCritialSection && !p.isAccessingCriticalSection) { // Not Accessing Critical Section or not requested it yet.
             p.clock++;
             pq.push({p.clock, p.id});
-            cout << YEL << "Processor " << p.id << " is requesting the critical section at " << p.clock << "\n" << NRM;
+            cout << YEL << "[" << p.clock << "] " << "REQUEST CRITICAL SECTION" << "\n" << NRM; 
             p.broadcast("REQUEST"); // Request for accessing critical section.
             p.hasRequestedCritialSection = true;
         }
         if (p.needsToRelease) {
             p.clock++;
-            cout << RED << "Processor " << p.id << " has left the critical section at " << p.clock << "\n" << NRM;
+            cout << RED << "[" << p.clock << "] " << "LEFT CRITICAL SECTION" << "\n" << NRM; 
             p.broadcast("RELEASE");
             pq.pop();
             p.isAccessingCriticalSection = false;
@@ -68,7 +70,7 @@ void *sender(void *arg) {
 void tryToAccessCritialSection() {
     if (p.noOfReplies == 2 && !pq.empty() && pq.top().second == p.id) {
         p.isAccessingCriticalSection = true;
-        cout << GRN << "Processor " << p.id << " is accessing the critical section at " << p.clock << "\n" << NRM;
+        cout << GRN << "[" << p.clock << "] " << "ACCESSING CRITICAL SECTION" << "\n" << NRM; 
         sleep(rand() % 2); // Random sleep to simulate processing of the critical section
         p.noOfReplies = 0;
         p.needsToRelease = true;
@@ -82,13 +84,18 @@ void *receiver(void *arg) {
         if (result[0] == "REPLY") { // REPLY is Received
             p.clock = max(p.clock, stoi(result[1])) + 1;
             p.noOfReplies++;
+            cout << BLU << "[" << p.clock << "] " << response << "\n" << NRM; 
             tryToAccessCritialSection();
         } else if (result[0] == "REQUEST") {
             p.clock = max(p.clock, stoi(result[1])) + 1;
+            cout << MAG << "[" << p.clock << "] " << response << "\n" << NRM; 
             pq.push({stoi(result[1]), stoi(result[2])});
+            p.clock++;
             connections[*((int *)arg)].sendMsg(string("REPLY") + "," + to_string(p.clock));
+            cout << "[" << p.clock << "] " << "REPLY SEND TO PROCESSOR " << result[2] << "\n" << NRM; 
         } else { // RELEASE message
             p.clock = max(p.clock, stoi(result[1])) + 1;
+            cout << CYN << "[" << p.clock << "] " << response << "\n" << NRM; 
             pq.pop();
             tryToAccessCritialSection();
         }
@@ -117,7 +124,9 @@ int main(int argc, char** argv) {
     
     connections.push_back(comms(client.connectToServer()));
     connections.push_back(comms(server.acceptNow()));
-    cout << GRN << "Connections Established\n" << NRM;
+    cout << GRN << "Connections Established at Processor " << p.id << "\n" << NRM;
+    cout << "--------------------------------------------\n";
+    cout << "[TIME] [MESSAGE]\n";
     // All the connections made at this point
     
     pthread_t thread_id[3];
