@@ -54,8 +54,8 @@ void *sender(void *arg) {
             p.hasRequestedCritialSection = true;
         }
         if (p.needsToRelease) {
-            cout << RED << "Processor " << p.id << " has left the critical section at " << p.clock << "\n" << NRM;
             p.clock++;
+            cout << RED << "Processor " << p.id << " has left the critical section at " << p.clock << "\n" << NRM;
             p.broadcast("RELEASE");
             pq.pop();
             p.isAccessingCriticalSection = false;
