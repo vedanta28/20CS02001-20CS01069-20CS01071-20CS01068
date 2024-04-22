@@ -8,7 +8,10 @@
 
 using namespace std;
 
-std::mutex mtx;
+std::mutex broadcastMtx;
+std::mutex mtx; // Mutex for critical section in sender thread
+/* NOTE: If we don't use Mutex, then clock++ like operations which are not atomic might give weird results */
+
 vector<comms> connections;
 int PORT_SERVER, PORT_CLIENT;
 priority_queue <pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq; // Min Priority Queue
@@ -18,7 +21,7 @@ class processor {
     int id, clock, noOfReplies;
     bool hasRequestedCritialSection, isAccessingCriticalSection, needsToRelease;
     void broadcast (string msgType) {
-        lock_guard<mutex> guard(mtx);
+        lock_guard<mutex> guard(broadcastMtx);
         if (msgType == "REQUEST") {
             connections[0].sendMsg(msgType + "," + to_string(clock) + "," + to_string(id));
             connections[1].sendMsg(msgType + "," + to_string(clock) + "," + to_string(id));
@@ -30,9 +33,6 @@ class processor {
 };
 
 processor p;
-
-
-
 
 vector<string> split (const string &s, char delim) {
     vector<string> result;
@@ -47,6 +47,9 @@ vector<string> split (const string &s, char delim) {
 void *sender(void *arg) {
     while(1) {
         sleep(rand() % 10); // Randomly Sleep for sometime
+
+        mtx.lock(); // Lock the mutex before accessing the shared variables
+
         // Requesting Critical Section
         if (!p.hasRequestedCritialSection && !p.isAccessingCriticalSection) { // Not Accessing Critical Section or not requested it yet.
             p.clock++;
@@ -64,6 +67,8 @@ void *sender(void *arg) {
             p.hasRequestedCritialSection = false;
             p.needsToRelease = false;
         }
+
+        mtx.unlock(); // Unlock the mutex after accessing the shared variables
     }
 }
 
@@ -81,6 +86,9 @@ void *receiver(void *arg) {
     while(1) {
         string response = connections[*((int *)arg)].receive();
         auto result = split(response, ',');
+
+        mtx.lock(); // Lock the mutex before accessing the shared variables
+
         if (result[0] == "REPLY") { // REPLY is Received
             p.clock = max(p.clock, stoi(result[1])) + 1;
             p.noOfReplies++;
@@ -99,6 +107,8 @@ void *receiver(void *arg) {
             pq.pop();
             tryToAccessCritialSection();
         }
+
+        mtx.unlock(); // Unlock the mutex after accessing the shared variables
     }
 }
 
