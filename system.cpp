@@ -9,7 +9,7 @@
 using namespace std;
 
 std::mutex broadcastMtx;
-std::mutex mtx; // Mutex for critical section in sender thread
+std::mutex mtx; // Mutex for critical section in sender and receiver threads
 /* NOTE: If we don't use Mutex, then clock++ like operations which are not atomic might give weird results */
 
 vector<comms> connections;
