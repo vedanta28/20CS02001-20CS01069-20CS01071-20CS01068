@@ -16,10 +16,11 @@ The structure of the system is as follows, where the number on the arrow is the 
 4. Run the simulation for the desired duration by executing the command in the terminal. When you wish to stop the simulation, press `Control + C` in the terminal window.
 # Video Simulation of the algorithm
 Simulation of Lamport's Algorithm for Distributed Systems was done using three linux systems.
-Three differnt linux devices were connected to the same wifi network and the code given above was run separately on these systems.
-The video simulation of the same has been recorded by our group and updated on youtube. The link is given below:
-
-https://youtu.be/0j5CC9oabvQ
+Three different linux devices were connected to the same WiFi network and the code given above was run separately on these systems.
+The [video simulation](http://www.youtube.com/watch?v=0j5CC9oabvQ) of the same has been recorded by our group and updated on youtube.
 
 # Team Members
-Vedanta Mohapatra (20CS02001), Himanshu Lal (20CS01069), Ramsundar Tanikella (20CS01071), Ayush Kashyap (20CS01068)
+- Vedanta Mohapatra (20CS02001)
+- Himanshu Lal (20CS01069)
+- Ramsundar Tanikella (20CS01071)
+- Ayush Kashyap (20CS01068)
